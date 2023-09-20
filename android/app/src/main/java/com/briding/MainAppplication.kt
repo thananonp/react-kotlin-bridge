@@ -1,6 +1,7 @@
 package com.briding
 
 import android.app.Application
+import com.briding.nativemodule.NativeModulePackage
 import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
 import com.facebook.react.ReactNativeHost
@@ -18,7 +19,9 @@ class MainApplication : Application(), ReactApplication {
         override fun getPackages(): List<ReactPackage> {
             // Packages that cannot be autolinked yet can be added manually here, for example:
             // packages.add(new MyReactNativePackage());
-            return PackageList(this).packages
+            return PackageList(this).packages.apply {
+                add(NativeModulePackage())
+            }
         }
 
         override fun getJSMainModuleName(): String {
