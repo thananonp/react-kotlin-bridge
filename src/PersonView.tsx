@@ -28,6 +28,10 @@ export const PersonView = () => {
         width: PixelRatio.getPixelSizeForLayoutSize(200),
       }}
       ref={ref}
+      persons={[
+        {name: 'Bee', surname: 'Buzz', age: 24, hobbies: {}},
+        {name: 'Ceca', surname: 'Culling', age: 25, hobbies: {}},
+      ]}
     />
   );
 };
