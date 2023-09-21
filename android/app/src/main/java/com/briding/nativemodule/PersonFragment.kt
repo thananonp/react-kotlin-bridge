@@ -29,11 +29,10 @@ class PersonFragment(
                     Column {
                         persons.forEach { person ->
                             Card(onClick = { onClick(person) }) {
-                                Text(text = person.name + person.surname + "age ${person.age}")
+                                Text(text = "${person.name} ${person.surname} \nage ${person.age}"  )
                             }
                         }
                     }
-
                 }
             }
         }

@@ -1,5 +1,8 @@
 package com.briding
 
+import android.content.Intent
+import android.os.Bundle
+import android.os.PersistableBundle
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
