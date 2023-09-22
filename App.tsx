@@ -5,7 +5,7 @@
  * @format
  */
 
-import React from 'react';
+import React, {useState} from 'react';
 import type {PropsWithChildren} from 'react';
 import {
   SafeAreaView,
@@ -63,6 +63,15 @@ function App(): JSX.Element {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
+  const [person, setPerson] = useState([
+    {name: 'Bee', surname: 'Buzz', age: 24, hobbies: {}},
+    {name: 'Ceca', surname: 'Culling', age: 25, hobbies: {}},
+  ]);
+
+  function updatePerson() {
+    setPerson([{name: 'New', surname: 'AF', age: 55, hobbies: {}}]);
+  }
+
   return (
     <SafeAreaView style={backgroundStyle}>
       <StatusBar
@@ -77,7 +86,7 @@ function App(): JSX.Element {
           style={{
             backgroundColor: isDarkMode ? Colors.black : Colors.white,
           }}>
-          <PersonView />
+          <PersonView person={person} updatePerson={updatePerson} />
           <Text>Hello</Text>
         </View>
       </ScrollView>
