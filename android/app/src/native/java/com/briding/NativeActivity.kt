@@ -11,6 +11,8 @@ import com.briding.nativemodule.PersonFragment
 import com.briding.nativemodule.PersonViewModel
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactFragment
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 
 class NativeActivity : ReactActivity() {
 
@@ -25,7 +27,7 @@ class NativeActivity : ReactActivity() {
         supportFragmentManager
             .beginTransaction()
             .add(R.id.native_activity, PersonFragment(viewModel))
-            .addToBackStack(null)
+            .addToBackStack("Native")
             .commit()
 
         val openReactButton = findViewById<Button>(R.id.open_react_btn)
@@ -37,15 +39,27 @@ class NativeActivity : ReactActivity() {
 
             supportFragmentManager
                 .beginTransaction()
-                .add(R.id.native_activity, reactNativeFragment)
+                .replace(R.id.native_activity, reactNativeFragment)
+                .addToBackStack("React")
                 .commit()
         }
     }
 }
 
 class NativePersonViewModel : PersonViewModel() {
-    override var people: List<Person> = listOf(Person("I'm", "Native", 2333, listOf()))
+    override var people: MutableStateFlow<MutableList<Person>> =
+        MutableStateFlow(mutableListOf(Person("I'm", "Native", 2333, listOf())))
     override var onPress: (person: Person) -> Unit = {
         Log.d("NativePersonViewModel", "onPress: ${it.age}")
+    }
+    override var onAddNewPerson: () -> Unit = {
+        people.value = (people.value + Person(getRandomString(5), getRandomString(6), 40, listOf())).toMutableList()
+    }
+
+    private fun getRandomString(length: Int): String {
+        val allowedChars = ('A'..'Z') + ('a'..'z') + ('0'..'9')
+        return (1..length)
+            .map { allowedChars.random() }
+            .joinToString("")
     }
 }

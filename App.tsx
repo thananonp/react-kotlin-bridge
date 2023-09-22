@@ -8,8 +8,10 @@
 import React, {useState} from 'react';
 import type {PropsWithChildren} from 'react';
 import {
+  Button,
   SafeAreaView,
   ScrollView,
+  ScrollViewComponent,
   StatusBar,
   StyleSheet,
   Text,
@@ -26,36 +28,6 @@ import {
 } from 'react-native/Libraries/NewAppScreen';
 import {PersonView} from './src/PersonView';
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
-function Section({children, title}: SectionProps): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
-
 function App(): JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
 
@@ -63,13 +35,30 @@ function App(): JSX.Element {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
-  const [person, setPerson] = useState([
-    {name: 'Bee', surname: 'Buzz', age: 24, hobbies: {}},
-    {name: 'Ceca', surname: 'Culling', age: 25, hobbies: {}},
-  ]);
+  type Person = {
+    name: string;
+    surname: string;
+    age: number;
+    hobbies: Object;
+  };
+  const [person, setPerson] = useState<Person[]>([]);
 
   function updatePerson() {
-    setPerson([{name: 'New', surname: 'AF', age: 55, hobbies: {}}]);
+    // setPerson([{name: 'New', surname: 'AF', age: 55, hobbies: {}}]);
+  }
+
+  function addNewPerson() {
+    console.log('Adding new person...');
+    setPerson([
+      ...person,
+      {
+        name: generateString(5),
+        surname: generateString(5),
+        age: 20,
+        hobbies: {},
+      },
+    ]);
+    console.log(person);
   }
 
   return (
@@ -78,39 +67,36 @@ function App(): JSX.Element {
         barStyle={isDarkMode ? 'light-content' : 'dark-content'}
         backgroundColor={backgroundStyle.backgroundColor}
       />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
+      <View style={backgroundStyle}>
         <Header />
+        <Button onPress={addNewPerson} title={'Add from react'} />
         <View
           style={{
             backgroundColor: isDarkMode ? Colors.black : Colors.white,
+            flexDirection: 'column',
+            padding: 20,
           }}>
-          <PersonView person={person} updatePerson={updatePerson} />
-          <Text>Hello</Text>
+          <PersonView
+            person={person}
+            updatePerson={updatePerson}
+            addNewPerson={addNewPerson}
+          />
         </View>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
+function generateString(length: number) {
+  const characters =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = ' ';
+  const charactersLength = characters.length;
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+
+  return result;
+}
 
 export default App;

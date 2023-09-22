@@ -25,7 +25,7 @@ class PersonViewManager(
 ) : ViewGroupManager<FrameLayout>() {
     private var propWidth: Int? = null
     private var propHeight: Int? = null
-    private var persons: MutableStateFlow<List<Person>> = MutableStateFlow(listOf())
+    private var persons: MutableStateFlow<MutableList<Person>> = MutableStateFlow(mutableListOf())
 
     override fun getName() = REACT_CLASS
 
@@ -73,7 +73,7 @@ class PersonViewManager(
                 return
             }
         }
-        this.persons.value = list
+        this.persons.value = list.toMutableList()
     }
 
     /**
@@ -84,11 +84,16 @@ class PersonViewManager(
         setupLayout(parentView)
         //
         val viewModel = ReactPersonViewModel()
-        viewModel.people = persons.value
+        viewModel.people = persons
         viewModel.onPress = {
             reactContext
                 .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
                 .emit("personOnPress", null)
+        }
+        viewModel.onAddNewPerson = {
+            reactContext
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                .emit("personAddNew", null)
         }
         //
         val myFragment = PersonFragment(viewModel)
@@ -130,7 +135,8 @@ class PersonViewManager(
     }
 
     private class ReactPersonViewModel: PersonViewModel() {
-        override var people: List<Person> = listOf()
+        override var people: MutableStateFlow<MutableList<Person>> = MutableStateFlow(mutableListOf())
         override var onPress: (person: Person) -> Unit = {}
+        override var onAddNewPerson: () -> Unit = {}
     }
 }
