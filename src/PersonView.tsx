@@ -17,7 +17,7 @@ const createFragment = viewId =>
     [viewId],
   );
 
-export const PersonView = ({person, updatePerson, addNewPerson}) => {
+export const PersonView = ({person, selectPerson, addNewPerson}) => {
   const ref = useRef(null);
 
   console.log('children', person);
@@ -29,7 +29,9 @@ export const PersonView = ({person, updatePerson, addNewPerson}) => {
 
   useEffect(() => {
     const eventEmitter = new NativeEventEmitter();
-    let eventListener = eventEmitter.addListener('personOnPress', updatePerson);
+    let eventListener = eventEmitter.addListener('personOnPress', event =>
+      selectPerson(event),
+    );
     let addNewPersonListener = eventEmitter.addListener(
       'personAddNew',
       addNewPerson,

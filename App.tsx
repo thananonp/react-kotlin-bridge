@@ -6,26 +6,15 @@
  */
 
 import React, {useState} from 'react';
-import type {PropsWithChildren} from 'react';
 import {
   Button,
   SafeAreaView,
-  ScrollView,
-  ScrollViewComponent,
   StatusBar,
-  StyleSheet,
-  Text,
   useColorScheme,
   View,
 } from 'react-native';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+import {Colors, Header} from 'react-native/Libraries/NewAppScreen';
 import {PersonView} from './src/PersonView';
 
 function App(): JSX.Element {
@@ -43,8 +32,9 @@ function App(): JSX.Element {
   };
   const [person, setPerson] = useState<Person[]>([]);
 
-  function updatePerson() {
-    // setPerson([{name: 'New', surname: 'AF', age: 55, hobbies: {}}]);
+  function selectPerson(person: Person) {
+    console.log(person);
+    // Use person here
   }
 
   function addNewPerson() {
@@ -78,7 +68,7 @@ function App(): JSX.Element {
           }}>
           <PersonView
             person={person}
-            updatePerson={updatePerson}
+            selectPerson={selectPerson}
             addNewPerson={addNewPerson}
           />
         </View>
