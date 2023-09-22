@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.viewModelScope
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactMethod
@@ -82,20 +83,27 @@ class PersonViewManager(
     fun createFragment(root: FrameLayout, reactNativeViewId: Int) {
         val parentView = root.findViewById<ViewGroup>(reactNativeViewId)
         setupLayout(parentView)
-        //
+        // Create React-side ViewModel
         val viewModel = ReactPersonViewModel()
+        // Assign method and variable
         viewModel.people = persons
         viewModel.onPress = {
+            // Create Arguments and pass it to React side
+            val personObject = Arguments.createMap().apply {
+                putString("name", it.name)
+                putString("surname", it.surname)
+                putInt("age", it.age)
+            }
             reactContext
                 .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
-                .emit("personOnPress", null)
+                .emit("personOnPress", personObject)
         }
         viewModel.onAddNewPerson = {
             reactContext
                 .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
                 .emit("personAddNew", null)
         }
-        //
+        // Create and display fragment
         val myFragment = PersonFragment(viewModel)
         val activity = reactContext.currentActivity as FragmentActivity
         activity.supportFragmentManager.beginTransaction()
@@ -134,8 +142,9 @@ class PersonViewManager(
         const val TAG = "PersonViewManager"
     }
 
-    private class ReactPersonViewModel: PersonViewModel() {
-        override var people: MutableStateFlow<MutableList<Person>> = MutableStateFlow(mutableListOf())
+    private class ReactPersonViewModel : PersonViewModel() {
+        override var people: MutableStateFlow<MutableList<Person>> =
+            MutableStateFlow(mutableListOf())
         override var onPress: (person: Person) -> Unit = {}
         override var onAddNewPerson: () -> Unit = {}
     }
