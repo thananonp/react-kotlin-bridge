@@ -15,7 +15,7 @@ import androidx.fragment.app.Fragment
 
 @OptIn(ExperimentalMaterialApi::class)
 class PersonFragment(
-    private val persons: List<Person>, private val onClick: (person: Person) -> Unit
+    var viewModel: PersonViewModel
 ) : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -27,9 +27,9 @@ class PersonFragment(
             setContent {
                 MaterialTheme {
                     Column {
-                        persons.forEach { person ->
-                            Card(onClick = { onClick(person) }) {
-                                Text(text = "${person.name} ${person.surname} \nage ${person.age}"  )
+                        viewModel.people.forEach { person ->
+                            Card(onClick = { viewModel.onPress(person) }) {
+                                Text(text = "${person.name} ${person.surname} \nage ${person.age}")
                             }
                         }
                     }

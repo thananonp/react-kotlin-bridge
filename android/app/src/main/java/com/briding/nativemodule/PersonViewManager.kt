@@ -6,12 +6,18 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.fragment.app.FragmentActivity
+import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableArray
+import com.facebook.react.bridge.WritableMap
+import com.facebook.react.modules.core.DeviceEventManagerModule
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.ViewGroupManager
 import com.facebook.react.uimanager.annotations.ReactProp
 import com.facebook.react.uimanager.annotations.ReactPropGroup
+import com.facebook.react.uimanager.events.RCTEventEmitter
+import kotlinx.coroutines.flow.MutableStateFlow
 
 
 class PersonViewManager(
@@ -19,8 +25,7 @@ class PersonViewManager(
 ) : ViewGroupManager<FrameLayout>() {
     private var propWidth: Int? = null
     private var propHeight: Int? = null
-    private var persons: List<Person> = listOf()
-    private val onClick: (person: Person) -> Unit = { }
+    private var persons: MutableStateFlow<List<Person>> = MutableStateFlow(listOf())
 
     override fun getName() = REACT_CLASS
 
@@ -68,7 +73,7 @@ class PersonViewManager(
                 return
             }
         }
-        this.persons = list
+        this.persons.value = list
     }
 
     /**
@@ -77,8 +82,16 @@ class PersonViewManager(
     fun createFragment(root: FrameLayout, reactNativeViewId: Int) {
         val parentView = root.findViewById<ViewGroup>(reactNativeViewId)
         setupLayout(parentView)
-
-        val myFragment = PersonFragment(persons, onClick)
+        //
+        val viewModel = ReactPersonViewModel()
+        viewModel.people = persons.value
+        viewModel.onPress = {
+            reactContext
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                .emit("personOnPress", null)
+        }
+        //
+        val myFragment = PersonFragment(viewModel)
         val activity = reactContext.currentActivity as FragmentActivity
         activity.supportFragmentManager.beginTransaction()
             .replace(reactNativeViewId, myFragment, reactNativeViewId.toString()).commit()
@@ -114,5 +127,10 @@ class PersonViewManager(
         private const val REACT_CLASS = "PersonViewManager"
         private const val COMMAND_CREATE = 1
         const val TAG = "PersonViewManager"
+    }
+
+    private class ReactPersonViewModel: PersonViewModel() {
+        override var people: List<Person> = listOf()
+        override var onPress: (person: Person) -> Unit = {}
     }
 }

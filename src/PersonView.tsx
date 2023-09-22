@@ -1,5 +1,11 @@
-import React, {useEffect, useRef} from 'react';
-import {PixelRatio, UIManager, findNodeHandle} from 'react-native';
+import React, {useEffect, useRef, useState} from 'react';
+import {
+  PixelRatio,
+  UIManager,
+  findNodeHandle,
+  NativeEventEmitter,
+  NativeModules,
+} from 'react-native';
 
 import {PersonViewManager} from './PersonViewManager';
 
@@ -11,12 +17,20 @@ const createFragment = viewId =>
     [viewId],
   );
 
-export const PersonView = () => {
+export const PersonView = ({person, updatePerson}) => {
   const ref = useRef(null);
 
   useEffect(() => {
     const viewId = findNodeHandle(ref.current);
     createFragment(viewId);
+
+    const eventEmitter = new NativeEventEmitter();
+    let eventListener = eventEmitter.addListener('personOnPress', updatePerson);
+
+    // Removes the listener once unmounted
+    return () => {
+      eventListener.remove();
+    };
   }, []);
 
   return (
@@ -28,10 +42,7 @@ export const PersonView = () => {
         width: PixelRatio.getPixelSizeForLayoutSize(200),
       }}
       ref={ref}
-      persons={[
-        {name: 'Bee', surname: 'Buzz', age: 24, hobbies: {}},
-        {name: 'Ceca', surname: 'Culling', age: 25, hobbies: {}},
-      ]}
+      persons={person}
     />
   );
 };
