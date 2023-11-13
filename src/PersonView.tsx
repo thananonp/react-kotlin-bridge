@@ -17,10 +17,15 @@ const createFragment = viewId =>
     [viewId],
   );
 
-export const PersonView = ({person, selectPerson, addNewPerson}) => {
+export const PersonView = ({
+  people,
+  isRefreshing,
+  selectPerson,
+  addNewPerson,
+  deleteAllPerson,
+  refresh,
+}) => {
   const ref = useRef(null);
-
-  console.log('children', person);
 
   useEffect(() => {
     const viewId = findNodeHandle(ref.current);
@@ -29,6 +34,7 @@ export const PersonView = ({person, selectPerson, addNewPerson}) => {
 
   useEffect(() => {
     const eventEmitter = new NativeEventEmitter();
+    // Listen to Kotlin event here
     let eventListener = eventEmitter.addListener('personOnPress', event =>
       selectPerson(event),
     );
@@ -37,13 +43,22 @@ export const PersonView = ({person, selectPerson, addNewPerson}) => {
       addNewPerson,
     );
 
+    let deleteAllPersonListener = eventEmitter.addListener(
+      'deleteAllPerson',
+      deleteAllPerson,
+    );
+
+    let refreshListener = eventEmitter.addListener('refresh', refresh);
+
     // Removes the listener once unmounted
     return () => {
       console.log('removed');
       eventListener.remove();
       addNewPersonListener.remove();
+      deleteAllPersonListener.remove();
+      refreshListener.remove();
     };
-  }, [person]);
+  }, [people]);
 
   return (
     <PersonViewManager
@@ -54,7 +69,8 @@ export const PersonView = ({person, selectPerson, addNewPerson}) => {
         width: PixelRatio.getPixelSizeForLayoutSize(200),
       }}
       ref={ref}
-      persons={person}
+      people={people}
+      isRefreshing={isRefreshing}
     />
   );
 };

@@ -1,23 +1,19 @@
 package com.briding.nativemodule
 
-import android.util.Log
 import android.view.Choreographer
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.ViewModel
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableArray
-import com.facebook.react.bridge.WritableMap
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.ViewGroupManager
 import com.facebook.react.uimanager.annotations.ReactProp
 import com.facebook.react.uimanager.annotations.ReactPropGroup
-import com.facebook.react.uimanager.events.RCTEventEmitter
 import kotlinx.coroutines.flow.MutableStateFlow
 
 
@@ -26,7 +22,9 @@ class PersonViewManager(
 ) : ViewGroupManager<FrameLayout>() {
     private var propWidth: Int? = null
     private var propHeight: Int? = null
-    private var persons: MutableStateFlow<MutableList<Person>> = MutableStateFlow(mutableListOf())
+
+    private var people: MutableStateFlow<MutableList<Person>> = MutableStateFlow(mutableListOf())
+    private var isRefreshing: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     override fun getName() = REACT_CLASS
 
@@ -60,9 +58,8 @@ class PersonViewManager(
         if (index == 1) propHeight = value
     }
 
-    @ReactProp(name = "persons", customType = "Read")
+    @ReactProp(name = "people", customType = "Read")
     fun setPersons(view: FrameLayout, persons: ReadableArray) {
-        Log.d(TAG, "setPersons: $persons")
         val personArrayList = persons.toArrayList()
         val list = personArrayList.map {
             if (it is HashMap<*, *>) {
@@ -74,7 +71,14 @@ class PersonViewManager(
                 return
             }
         }
-        this.persons.value = list.toMutableList()
+        this.people.value = list.toMutableList()
+    }
+
+    @ReactProp(name = "isRefreshing", customType = "boolean")
+    fun setIsRefreshing(
+        view: FrameLayout, isRefreshing: Boolean
+    ) {
+        this.isRefreshing.value = isRefreshing
     }
 
     /**
@@ -84,9 +88,10 @@ class PersonViewManager(
         val parentView = root.findViewById<ViewGroup>(reactNativeViewId)
         setupLayout(parentView)
         // Create React-side ViewModel
-        val viewModel = ReactPersonViewModel()
+        val viewModel = ReactPersonBlueprint()
         // Assign method and variable
-        viewModel.people = persons
+        viewModel.people = people
+        viewModel.isRefreshing = isRefreshing
         viewModel.onPress = {
             // Create Arguments and pass it to React side
             val personObject = Arguments.createMap().apply {
@@ -94,15 +99,22 @@ class PersonViewManager(
                 putString("surname", it.surname)
                 putInt("age", it.age)
             }
-            reactContext
-                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+            reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
                 .emit("personOnPress", personObject)
         }
         viewModel.onAddNewPerson = {
-            reactContext
-                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+            reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
                 .emit("personAddNew", null)
         }
+        viewModel.onDeleteAllPerson = {
+            reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                .emit("deleteAllPerson", null)
+        }
+        viewModel.refresh = {
+            reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                .emit("refresh", null)
+        }
+
         // Create and display fragment
         val myFragment = PersonFragment(viewModel)
         val activity = reactContext.currentActivity as FragmentActivity
@@ -110,7 +122,7 @@ class PersonViewManager(
             .replace(reactNativeViewId, myFragment, reactNativeViewId.toString()).commit()
     }
 
-    fun setupLayout(view: View) {
+    private fun setupLayout(view: View) {
         Choreographer.getInstance().postFrameCallback(object : Choreographer.FrameCallback {
             override fun doFrame(frameTimeNanos: Long) {
                 manuallyLayoutChildren(view)
@@ -142,10 +154,13 @@ class PersonViewManager(
         const val TAG = "PersonViewManager"
     }
 
-    private class ReactPersonViewModel : PersonViewModel() {
+    private class ReactPersonBlueprint : PersonBlueprint {
         override var people: MutableStateFlow<MutableList<Person>> =
             MutableStateFlow(mutableListOf())
+        override var isRefreshing: MutableStateFlow<Boolean> = MutableStateFlow(false)
         override var onPress: (person: Person) -> Unit = {}
         override var onAddNewPerson: () -> Unit = {}
+        override var onDeleteAllPerson: () -> Unit = {}
+        override var refresh: () -> Unit = {}
     }
 }

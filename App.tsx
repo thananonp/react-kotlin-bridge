@@ -10,6 +10,7 @@ import {
   Button,
   SafeAreaView,
   StatusBar,
+  Text,
   useColorScheme,
   View,
 } from 'react-native';
@@ -30,7 +31,10 @@ function App(): JSX.Element {
     age: number;
     hobbies: Object;
   };
-  const [person, setPerson] = useState<Person[]>([]);
+  const [people, setPeople] = useState<Person[]>([
+    {name: 'Default', surname: 'Person', age: 20, hobbies: {}},
+  ]);
+  const [refreshing, setRefreshing] = useState(false);
 
   function selectPerson(person: Person) {
     console.log(person);
@@ -39,8 +43,8 @@ function App(): JSX.Element {
 
   function addNewPerson() {
     console.log('Adding new person...');
-    setPerson([
-      ...person,
+    setPeople([
+      ...people,
       {
         name: generateString(5),
         surname: generateString(5),
@@ -48,7 +52,19 @@ function App(): JSX.Element {
         hobbies: {},
       },
     ]);
-    console.log(person);
+    console.log(people);
+  }
+
+  async function deleteAllPerson() {
+    await new Promise(r => setTimeout(r, 2000));
+    setPeople([]);
+  }
+
+  async function refresh() {
+    setRefreshing(true);
+    await new Promise(r => setTimeout(r, 2000));
+    setRefreshing(false);
+    setPeople([{name: 'Default', surname: 'Person', age: 20, hobbies: {}}]);
   }
 
   return (
@@ -59,7 +75,8 @@ function App(): JSX.Element {
       />
       <View style={backgroundStyle}>
         <Header />
-        <Button onPress={addNewPerson} title={'Add from react'} />
+        {/* <Button onPress={addNewPerson} title={'Add from react'} /> */}
+        <Text>{refreshing.toString()}</Text>
         <View
           style={{
             backgroundColor: isDarkMode ? Colors.black : Colors.white,
@@ -67,9 +84,14 @@ function App(): JSX.Element {
             padding: 20,
           }}>
           <PersonView
-            person={person}
+            // source of truth
+            people={people}
+            isRefreshing={refreshing}
+            // function callbacks
             selectPerson={selectPerson}
             addNewPerson={addNewPerson}
+            deleteAllPerson={deleteAllPerson}
+            refresh={refresh}
           />
         </View>
       </View>
