@@ -1,5 +1,6 @@
 package com.briding.nativemodule
 
+import android.util.Log
 import android.view.Choreographer
 import android.view.View
 import android.view.ViewGroup
@@ -8,7 +9,9 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableArray
+import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.ViewGroupManager
@@ -36,7 +39,11 @@ class PersonViewManager(
     /**
      * Map the "create" command to an integer
      */
-    override fun getCommandsMap() = mapOf("create" to COMMAND_CREATE)
+    override fun getCommandsMap() = mapOf(
+        "create" to COMMAND_CREATE,
+        ::sendSomeObject.name to COMMAND_SEND_SOME_OBJECT,
+        ::sendSomeArray.name to COMMAND_SEND_SOME_ARRAY
+    )
 
     /**
      * Handle "create" command (called from JS) and call createFragment method
@@ -45,10 +52,27 @@ class PersonViewManager(
         root: FrameLayout, commandId: String, args: ReadableArray?
     ) {
         super.receiveCommand(root, commandId, args)
-        val reactNativeViewId = requireNotNull(args).getInt(0)
+        Log.d(TAG, "receiveCommand id: $commandId")
+        Log.d(TAG, "receiveCommand args: $args")
+        requireNotNull(args)
 
         when (commandId.toInt()) {
-            COMMAND_CREATE -> createFragment(root, reactNativeViewId)
+            COMMAND_CREATE -> {
+                val reactNativeViewId = args.getInt(0)
+                createFragment(root, reactNativeViewId)
+            }
+
+            COMMAND_SEND_SOME_OBJECT -> {
+                // Convert object to Hashmap
+                val map = args.toArrayList().first() as HashMap<*, *>
+                sendSomeObject(map)
+            }
+
+            COMMAND_SEND_SOME_ARRAY -> {
+                // Convert array to ArrayList
+                val map = args.toArrayList().first() as ArrayList<Double>
+                sendSomeArray(map)
+            }
         }
     }
 
@@ -79,6 +103,16 @@ class PersonViewManager(
         view: FrameLayout, isRefreshing: Boolean
     ) {
         this.isRefreshing.value = isRefreshing
+    }
+
+    @ReactMethod
+    fun sendSomeObject(map: HashMap<*, *>?) {
+        Log.d(TAG, "sendSomeObject: $map")
+    }
+
+    @ReactMethod
+    fun sendSomeArray(array: ArrayList<Double>?) {
+        Log.d(TAG, "sendSomeArray: $array")
     }
 
     /**
@@ -151,6 +185,8 @@ class PersonViewManager(
     companion object {
         private const val REACT_CLASS = "PersonViewManager"
         private const val COMMAND_CREATE = 1
+        private const val COMMAND_SEND_SOME_OBJECT = 2
+        private const val COMMAND_SEND_SOME_ARRAY = 3
         const val TAG = "PersonViewManager"
     }
 
